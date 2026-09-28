@@ -39,6 +39,7 @@ const LS_WORKSPACE = "muse-desktop.workspace.v1";
 const LS_MODEL = "muse-desktop.model.v1";
 const LS_EFFORT = "muse-desktop.effort.v1";
 const LS_CLI = "muse-desktop.cli-path.v1";
+const LS_APPROVAL = "muse-desktop.approval.v1";
 
 // Reasoning-Stufen der Muse-CLI (--reasoning-effort), Default: high.
 const EFFORTS = [
@@ -96,6 +97,7 @@ const workspaceEl = el<HTMLInputElement>("workspace");
 const workspaceBtn = el<HTMLButtonElement>("workspace-btn");
 const modelEl = el<HTMLInputElement>("model");
 const modelBadgeEl = el("model-badge");
+const approvalEl = el<HTMLSelectElement>("approval");
 const effortPillsEl = el("effort-pills");
 const effortBadgeEl = el("effort-badge");
 const cliStatusEl = el("cli-status");
@@ -244,7 +246,28 @@ function renderMessages(streaming = false): void {
       copy.innerHTML = `${ICON_COPY}<span>Kopieren</span>`;
       copy.title = "Antwort kopieren";
       copy.onclick = () => copyText(m.text, copy);
-      role.append(av, who, when, spacer, copy);
+      role.append(av, who, when, spacer);
+      if (m.text.includes("[Fehler:")) {
+        const retry = document.createElement("button");
+        retry.className = "mini-btn show";
+        retry.textContent = "Erneut versuchen";
+        retry.title = "Letzte Anfrage erneut senden";
+        retry.onclick = () => {
+          const sess = activeSession();
+          let lastUser = "";
+          for (let i = 0; i <= idx && i < sess.messages.length; i++) {
+            if (sess.messages[i].role === "user") lastUser = sess.messages[i].text;
+          }
+          // Fehler-Antwort (und alles danach) verwerfen, Anfrage wiederholen.
+          sess.messages = sess.messages.slice(0, idx);
+          persist();
+          renderMessages();
+          refreshTopbar();
+          if (lastUser) void send(lastUser);
+        };
+        role.appendChild(retry);
+      }
+      role.appendChild(copy);
       div.appendChild(role);
     }
 
@@ -526,8 +549,10 @@ function autogrow(): void {
   promptEl.style.height = Math.min(promptEl.scrollHeight, 200) + "px";
 }
 
-async function send(): Promise<void> {
-  const prompt = promptEl.value.trim();
+let runTimer: ReturnType<typeof setInterval> | null = null;
+
+async function send(preset?: string): Promise<void> {
+  const prompt = (preset ?? promptEl.value).trim();
   if (!prompt || sending) return;
   const workspace = workspaceEl.value.trim();
   if (!workspace) {
@@ -560,7 +585,13 @@ async function send(): Promise<void> {
   sending = true;
   sendBtn.disabled = true;
   composerMetaEl.textContent = "Muse arbeitet …";
-  setStatus("busy", `Denkt nach (${effortLabel(effort)})`, workspace);
+  const t0 = Date.now();
+  const tick = () => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    setStatus("busy", `Denkt nach (${effortLabel(effort)}) · ${s} s`, workspace);
+  };
+  tick();
+  runTimer = setInterval(tick, 500);
 
   const images = userMsg.images ?? [];
   const model = modelEl.value.trim() || "default";
@@ -589,6 +620,7 @@ async function send(): Promise<void> {
           images,
           model,
           reasoning_effort: effort,
+          approval_mode: approvalEl.value,
           cli_path: cli,
         },
       });
@@ -609,6 +641,10 @@ async function send(): Promise<void> {
     setStatus("error", "Fehler", workspace);
   } finally {
     if (unlisten) unlisten();
+    if (runTimer) {
+      clearInterval(runTimer);
+      runTimer = null;
+    }
     sending = false;
     sendBtn.disabled = false;
     composerMetaEl.textContent = "Strg+Enter zum Senden";
@@ -736,7 +772,7 @@ async function init(): Promise<void> {
       localStorage.setItem(LS_WORKSPACE, picked);
     }
   };
-  newChatBtn.onclick = () => {
+  function newChat(): void {
     const s: Session = { id: uid(), title: "Neuer Chat", createdAt: Date.now(), messages: [] };
     sessions.unshift(s);
     activeId = s.id;
@@ -744,7 +780,24 @@ async function init(): Promise<void> {
     renderSessions();
     renderMessages();
     refreshTopbar();
-  };
+    promptEl.focus();
+  }
+  newChatBtn.onclick = newChat;
+  newChatBtn.title = "Neuer Chat (Strg+K)";
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      if (!sending) newChat();
+    }
+  });
+
+  const savedApproval = localStorage.getItem(LS_APPROVAL);
+  if (savedApproval && [...approvalEl.options].some((o) => o.value === savedApproval)) {
+    approvalEl.value = savedApproval;
+  }
+  approvalEl.addEventListener("change", () =>
+    localStorage.setItem(LS_APPROVAL, approvalEl.value)
+  );
 
   await checkCli();
   renderEffort();

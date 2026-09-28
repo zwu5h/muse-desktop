@@ -101,6 +101,8 @@ struct SendPromptArgs {
     #[serde(default)]
     reasoning_effort: Option<String>,
     #[serde(default)]
+    approval_mode: Option<String>,
+    #[serde(default)]
     cli_path: Option<String>,
 }
 
@@ -230,6 +232,11 @@ async fn run_exec(app: &AppHandle, run_id: &str, args: &SendPromptArgs) -> Resul
     if let Some(eff) = &args.reasoning_effort {
         if !eff.trim().is_empty() {
             cmd.arg("--reasoning-effort").arg(eff.trim());
+        }
+    }
+    if let Some(mode) = &args.approval_mode {
+        if !mode.trim().is_empty() {
+            cmd.arg("--approval-mode").arg(mode.trim());
         }
     }
     for img in &args.images {

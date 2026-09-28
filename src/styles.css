@@ -244,6 +244,7 @@ body {
 }
 
 input[type="text"],
+select,
 textarea {
   background: var(--panel-2);
   border: 1px solid var(--border);
@@ -257,11 +258,13 @@ textarea {
 }
 
 input[type="text"]:hover,
+select:hover,
 textarea:hover {
   border-color: #313a4e;
 }
 
 input[type="text"]:focus,
+select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent-bright);
@@ -272,6 +275,33 @@ textarea:focus {
 input[type="text"]::placeholder,
 textarea::placeholder {
   color: var(--muted-dim);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='11' height='11' fill='none' stroke='%238f99ad' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
+.mini-btn.show {
+  opacity: 1;
+}
+
+.msg.streaming {
+  animation: stream-glow 2.2s ease-in-out infinite;
+}
+
+@keyframes stream-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px var(--accent-soft), 0 6px 24px rgba(0, 100, 224, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 1px var(--accent-soft), 0 6px 30px rgba(0, 100, 224, 0.28);
+  }
 }
 
 .pills {
