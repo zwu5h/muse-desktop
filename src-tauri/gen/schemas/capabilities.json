@@ -1,0 +1,1 @@
+{"main-capability":{"identifier":"main-capability","description":"Basis-Rechte für Muse Desktop","local":true,"windows":["main"],"permissions":["core:default","dialog:default","dialog:allow-open","fs:default"]}}
