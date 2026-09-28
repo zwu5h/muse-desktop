@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <rect x="8" y="8" width="240" height="240" rx="58" fill="#0064E0"/>
-  <rect x="8" y="8" width="240" height="240" rx="58" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="6"/>
-  <text x="118" y="180" text-anchor="middle" font-family="-apple-system,'Segoe UI',Roboto,Arial,sans-serif" font-size="148" font-weight="800" fill="#ffffff">M</text>
-  <path d="M196,34 C198,48 202,52 216,54 C202,56 198,60 196,74 C194,60 190,56 176,54 C190,52 194,48 196,34 Z" fill="#9CC8FF"/>
+  <defs>
+    <linearGradient id="muse-blue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#043EFF"/>
+      <stop offset="1" stop-color="#148CFF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="125" fill="#ffffff"/>
+  <circle cx="128" cy="128" r="125" fill="none" stroke="#E1E2E6" stroke-width="2"/>
+  <polyline
+    points="31,141 51,102 72,72 64,141 56,210 87,148 123,90 121,148 120,210 151,154 184,115 182,164 179,210 205,184 230,159"
+    fill="none" stroke="url(#muse-blue)" stroke-width="29"
+    stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
